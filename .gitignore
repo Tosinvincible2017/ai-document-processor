@@ -1,0 +1,27 @@
+# Environment & secrets
+.env
+.env.local
+
+# SSL certificates
+certs/
+
+# Model weights (downloaded at runtime)
+yolov8n.pt
+
+# Database
+*.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Runtime data
+uploads/
+previews/
+output/
+
+# IDE / tools
+.claude/
+.vscode/
+.idea/

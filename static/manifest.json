@@ -1,0 +1,41 @@
+{
+  "name": "DocProcessor — AI Document Analysis",
+  "short_name": "DocProcessor",
+  "description": "AI-powered document processing with OCR, handwriting detection, and intelligent data extraction",
+  "start_url": "/ui/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12003c",
+  "theme_color": "#12003c",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    {
+      "src": "/ui/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ui/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Upload Document",
+      "short_name": "Upload",
+      "url": "/ui/index.html",
+      "description": "Upload and process a new document"
+    },
+    {
+      "name": "Database",
+      "short_name": "Database",
+      "url": "/ui/index.html#database",
+      "description": "Browse processed documents"
+    }
+  ]
+}

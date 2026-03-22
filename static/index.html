@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DocProcessor — AI Document Analysis</title>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#12003c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DocProcessor">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DocProcessor">
+    <meta name="msapplication-TileColor" content="#12003c">
+    <meta name="msapplication-navbutton-color" content="#12003c">
+    <link rel="manifest" href="/ui/manifest.json">
+    <link rel="apple-touch-icon" href="/ui/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/ui/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/ui/icons/icon-512.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #12003c;
+            --navy-light: #1a0650;
+            --dark-card: #1e0a5a;
+            --dark-surface: #251066;
+            --border: rgba(156, 114, 251, 0.15);
+            --border-hover: rgba(156, 114, 251, 0.35);
+            --text: #f0edf7;
+            --text2: #a89ec8;
+            --text3: #7b6fa0;
+            --teal: #3bc4b2;
+            --teal-dark: #2a9d8f;
+            --purple: #9c72fb;
+            --purple-light: #b89aff;
+            --cyan: #29edfd;
+            --gradient: linear-gradient(135deg, #37c8b7 0%, #6c9ac4 40%, #9c72fb 100%);
+            --gradient-hover: linear-gradient(135deg, #42dcc8 0%, #7cadd4 40%, #b08aff 100%);
+            --gradient-dark: linear-gradient(135deg, #12003c 0%, #2a0845 50%, #1a0535 100%);
+            --gradient-card: linear-gradient(145deg, rgba(156,114,251,0.08) 0%, rgba(59,196,178,0.04) 100%);
+            --success: #3bc4b2;
+            --error: #ff5c6c;
+            --warning: #ffb347;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-glow: 0 0 30px rgba(156, 114, 251, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--navy);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .app { display: flex; height: 100vh; overflow: hidden; }
+
+        /* ═══ Sidebar ═══ */
+        .sidebar {
+            width: 280px;
+            background: var(--gradient-dark);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .sidebar-header .badge {
+            font-size: 10px;
+            font-weight: 700;
+            background: var(--gradient);
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .sidebar-header p {
+            color: var(--text3);
+            font-size: 12px;
+            margin-top: 6px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .sidebar-nav {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            color: var(--text2);
+            font-size: 13px;
+            font-weight: 500;
+            text-align: left;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Manrope', sans-serif;
+            letter-spacing: 0.2px;
+        }
+
+        .nav-btn:hover { background: rgba(156, 114, 251, 0.1); color: var(--text); }
+        .nav-btn.active {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 196, 178, 0.3);
+        }
+        .nav-btn .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .history-item {
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover {
+            background: rgba(156, 114, 251, 0.08);
+            border-color: var(--border);
+        }
+        .history-item.active {
+            background: var(--gradient);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(59, 196, 178, 0.2);
+        }
+
+        .history-item .name {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item .meta {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 400;
+        }
+
+        .history-item.active .meta { color: rgba(255,255,255,0.7); }
+
+        .history-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text3);
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        /* ═══ Main ═══ */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--navy);
+        }
+
+        .topbar {
+            padding: 18px 28px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(18, 0, 60, 0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .topbar h2 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .health-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .health-dot.ok { background: var(--teal); box-shadow: 0 0 8px rgba(59, 196, 178, 0.5); }
+        .health-dot.degraded { background: var(--warning); box-shadow: 0 0 8px rgba(255, 179, 71, 0.5); }
+        .health-dot.offline { background: var(--error); box-shadow: 0 0 8px rgba(255, 92, 108, 0.5); }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+        }
+
+        /* ═══ Upload ═══ */
+        .upload-section { max-width: 720px; margin: 40px auto 0; }
+
+        .dropzone {
+            border: 2px dashed var(--border-hover);
+            border-radius: 16px;
+            padding: 70px 40px;
+            text-align: center;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            background: var(--gradient-card);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropzone::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(ellipse at center, rgba(156, 114, 251, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--teal);
+            background: linear-gradient(145deg, rgba(59,196,178,0.1) 0%, rgba(156,114,251,0.08) 100%);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .dropzone-icon { font-size: 52px; margin-bottom: 20px; opacity: 0.7; }
+        .dropzone h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: -0.2px;
+        }
+        .dropzone p { color: var(--text2); font-size: 14px; font-weight: 400; }
+
+        .dropzone .browse-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 32px;
+            background: var(--gradient);
+            color: white;
+            border-radius: 35px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(59, 196, 178, 0.3), inset 0 1px 3px rgba(255,255,255,0.1);
+        }
+
+        .dropzone:hover .browse-btn {
+            background: var(--gradient-hover);
+            box-shadow: 0 6px 20px rgba(59, 196, 178, 0.4), inset 0 1px 3px rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+        }
+
+        .upload-options {
+            margin-top: 20px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .upload-options label {
+            font-size: 13px;
+            color: var(--text2);
+            font-weight: 500;
+        }
+
+        .upload-options select, select {
+            background: var(--dark-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .upload-options select:hover, select:hover { border-color: var(--border-hover); }
+        .upload-options select:focus, select:focus { border-color: var(--teal); outline: none; }
+
+        /* ═══ Processing ═══ */
+        .processing-card {
+            background: var(--dark-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-top: 24px;
+            display: none;
+            box-shadow: var(--shadow);
+        }
+
+        .processing-card.visible { display: block; }
+
+        .processing-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .spinner {
+            width: 22px; height: 22px;
+            border: 2px solid var(--border);
+            border-top-color: var(--teal);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .progress-log {
+            background: var(--navy);
+            border-radius: 10px;
+            padding: 14px;
+            font-family: 'Manrope', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 2;
+            border: 1px solid var(--border);
+        }
+
+        .progress-log .step { color: var(--text3); }
+        .progress-log .step.active { color: var(--cyan); }
+        .progress-log .step.done { color: var(--teal); }
+        .progress-log .step.done::before { content: '\2713 '; }
+        .progress-log .step.active::before { content: '\25B6 '; }
+
+        /* ═══ Result View ═══ */
+        .result-view { display: none; max-width: 940px; margin: 0 auto; }
+        .result-view.visible { display: block; }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .result-title h3 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+        }
+        .result-title p { color: var(--text2); font-size: 13px; margin-top: 6px; font-weight: 400; }
+        .result-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .tag {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-invoice { background: rgba(156, 114, 251, 0.15); color: var(--purple-light); }
+        .tag-general { background: rgba(59, 196, 178, 0.15); color: var(--teal); }
+        .tag-completed { background: rgba(59, 196, 178, 0.15); color: var(--teal); }
+        .tag-failed { background: rgba(255, 92, 108, 0.15); color: var(--error); }
+
+        .result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 35px;
+            border: 1px solid var(--border);
+            background: var(--dark-card);
+            color: var(--text);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-family: 'Manrope', sans-serif;
+            letter-spacing: 0.2px;
+        }
+
+        .btn:hover {
+            border-color: var(--border-hover);
+            background: var(--dark-surface);
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: var(--gradient);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 196, 178, 0.25);
+        }
+        .btn-primary:hover {
+            background: var(--gradient-hover);
+            box-shadow: 0 6px 20px rgba(59, 196, 178, 0.35);
+        }
+        .btn-danger { border-color: rgba(255, 92, 108, 0.3); color: var(--error); }
+        .btn-danger:hover { background: rgba(255, 92, 108, 0.1); border-color: var(--error); }
+        .btn-sm { padding: 7px 14px; font-size: 11px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .result-card {
+            background: var(--gradient-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .result-card h4 {
+            font-size: 11px;
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
+            font-weight: 700;
+        }
+
+        .result-card.full { grid-column: 1 / -1; }
+
+        .kv-table { width: 100%; }
+        .kv-table tr td {
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+        }
+        .kv-table tr:last-child td { border-bottom: none; }
+        .kv-table .label { color: var(--text2); width: 150px; font-weight: 400; }
+        .kv-table .value { font-weight: 600; }
+
+        .items-table { width: 100%; border-collapse: collapse; }
+        .items-table th {
+            text-align: left; font-size: 11px; color: var(--teal);
+            text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+        }
+        .items-table td {
+            padding: 10px 0; font-size: 13px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+        }
+
+        .raw-text-box {
+            background: var(--navy); border-radius: 10px; padding: 18px;
+            font-family: 'Manrope', monospace; font-size: 12px; max-height: 300px;
+            overflow-y: auto; white-space: pre-wrap; word-break: break-word;
+            line-height: 1.8; color: var(--text2); border: 1px solid var(--border);
+        }
+
+        .json-box {
+            background: var(--navy); border-radius: 10px; padding: 18px;
+            font-family: 'Manrope', monospace;
+            font-size: 12px; max-height: 400px; overflow-y: auto;
+            white-space: pre-wrap; word-break: break-word; line-height: 1.8;
+            border: 1px solid var(--border);
+        }
+
+        /* ═══ Tabs ═══ */
+        .tabs { display: flex; gap: 4px; margin-bottom: 18px; }
+        .tab {
+            padding: 10px 20px; border-radius: 35px; font-size: 13px;
+            cursor: pointer; color: var(--text2); transition: all 0.3s ease;
+            border: 1px solid transparent; background: none;
+            font-family: 'Manrope', sans-serif; font-weight: 500;
+        }
+        .tab:hover { color: var(--text); border-color: var(--border); }
+        .tab.active {
+            background: var(--gradient);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 3px 12px rgba(59, 196, 178, 0.25);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ═══ DATABASE BROWSER ═══ */
+        .db-page { display: none; }
+        .db-page.visible { display: block; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--gradient-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+
+        .stat-card .stat-value {
+            font-size: 30px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-bar input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 18px;
+            background: var(--dark-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 35px;
+            font-size: 13px;
+            font-family: 'Manrope', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input[type="text"]:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 15px rgba(59, 196, 178, 0.15);
+        }
+
+        .search-bar input[type="date"] {
+            padding: 10px 14px;
+            background: var(--dark-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 35px;
+            font-size: 12px;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .data-table-wrap {
+            background: var(--gradient-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .data-table { width: 100%; border-collapse: collapse; }
+
+        .data-table th {
+            text-align: left; font-size: 11px; color: var(--teal);
+            text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+            background: rgba(156, 114, 251, 0.05);
+            cursor: pointer; user-select: none; white-space: nowrap;
+        }
+
+        .data-table th:hover { color: var(--cyan); }
+        .data-table th .sort-arrow { margin-left: 4px; font-size: 10px; }
+
+        .data-table td {
+            padding: 14px 18px; font-size: 13px; border-bottom: 1px solid var(--border);
+            max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .data-table tr { cursor: pointer; transition: background 0.2s ease; }
+        .data-table tr:hover { background: rgba(156, 114, 251, 0.06); }
+
+        .pagination {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px; font-size: 12px; color: var(--text2);
+        }
+
+        .pagination-btns { display: flex; gap: 6px; }
+
+        .export-bar {
+            display: flex; gap: 8px; margin-bottom: 18px; justify-content: flex-end;
+        }
+
+        /* ═══ Toast ═══ */
+        .toast {
+            position: fixed; bottom: 28px; right: 28px; padding: 14px 24px;
+            border-radius: 35px; font-size: 13px; font-weight: 600; z-index: 1000;
+            transform: translateY(100px); opacity: 0; transition: all 0.4s ease;
+            font-family: 'Manrope', sans-serif; letter-spacing: 0.2px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .toast.visible { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--gradient); color: white; }
+        .toast.error { background: var(--error); color: white; }
+
+        /* ═══ Mobile Hamburger ═══ */
+        .mobile-header {
+            display: none;
+            padding: 14px 18px;
+            background: var(--navy);
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .mobile-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .hamburger {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 26px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .hamburger:hover { background: rgba(156, 114, 251, 0.15); }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(18, 0, 60, 0.7);
+            z-index: 200;
+            backdrop-filter: blur(4px);
+        }
+
+        .mobile-overlay.visible { display: block; }
+
+        /* ═══ Bottom Tab Bar (mobile) ═══ */
+        .bottom-tabs {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--navy-light);
+            border-top: 1px solid var(--border);
+            z-index: 100;
+            padding: 6px 0;
+            padding-bottom: max(6px, env(safe-area-inset-bottom));
+        }
+
+        .bottom-tabs-inner {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .bottom-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 6px 16px;
+            border: none;
+            background: none;
+            color: var(--text3);
+            font-size: 10px;
+            font-weight: 600;
+            font-family: 'Manrope', sans-serif;
+            cursor: pointer;
+            transition: color 0.2s;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-radius: 10px;
+        }
+
+        .bottom-tab .tab-icon { font-size: 22px; }
+        .bottom-tab.active { color: var(--teal); }
+        .bottom-tab:active { background: rgba(156, 114, 251, 0.1); }
+
+        /* ═══ Pull-to-refresh indicator ═══ */
+        .pull-indicator {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: var(--teal);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .app { flex-direction: column; height: 100vh; }
+            .sidebar {
+                position: fixed;
+                top: 0; left: 0; bottom: 0;
+                z-index: 300;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                width: 280px;
+            }
+            .sidebar.open { transform: translateX(0); }
+
+            .mobile-header { display: flex; }
+            .bottom-tabs { display: block; }
+            .topbar { display: none; }
+
+            .main {
+                padding-top: 0;
+                padding-bottom: 70px; /* space for bottom tabs */
+            }
+
+            .content { padding: 16px; }
+            .upload-section { margin-top: 10px; }
+            .dropzone { padding: 40px 20px; }
+            .dropzone-icon { font-size: 40px; }
+            .dropzone h3 { font-size: 16px; }
+            .dropzone p { font-size: 13px; }
+            .dropzone .browse-btn { padding: 10px 24px; font-size: 13px; }
+
+            .upload-options {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .upload-options label { margin-left: 0 !important; }
+
+            .result-header { flex-direction: column; }
+            .result-actions {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .result-actions .btn { text-align: center; }
+
+            .result-grid { grid-template-columns: 1fr; gap: 12px; }
+            .result-view { max-width: 100%; }
+
+            .tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 2px;
+            }
+            .tabs::-webkit-scrollbar { display: none; }
+            .tab { white-space: nowrap; padding: 8px 14px; font-size: 12px; }
+
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-card .stat-value { font-size: 24px; }
+
+            .search-bar {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .search-bar input[type="text"] { min-width: unset; width: 100%; }
+            .search-bar select,
+            .search-bar input[type="date"] { width: 100%; }
+            .search-bar .btn { width: 48%; }
+
+            .data-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .data-table { min-width: 600px; }
+
+            .export-bar { justify-content: center; }
+
+            .result-badges { flex-wrap: wrap; }
+
+            .kv-table .label { width: 110px; font-size: 12px; }
+            .kv-table .value { font-size: 12px; }
+
+            .lightbox-nav { padding: 12px 10px; font-size: 24px; }
+            .lightbox-nav.prev { left: 8px; }
+            .lightbox-nav.next { right: 8px; }
+
+            .toast {
+                left: 16px; right: 16px;
+                bottom: 80px; /* above bottom tabs */
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .result-actions { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        /* iOS safe area support */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .mobile-header {
+                padding-top: max(14px, env(safe-area-inset-top));
+            }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--purple); }
+
+        /* ═══ Document Preview ═══ */
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            padding: 18px;
+        }
+
+        .preview-page {
+            background: var(--dark-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .preview-page:hover {
+            transform: scale(1.01);
+            box-shadow: 0 8px 30px rgba(156, 114, 251, 0.2);
+            border-color: var(--border-hover);
+        }
+
+        .preview-page img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .preview-page-label {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(18, 0, 60, 0.85);
+            color: var(--text);
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .preview-thumb {
+            width: 60px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .preview-thumb:hover { border-color: var(--purple); }
+
+        .preview-nav {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            justify-content: center;
+        }
+
+        .preview-nav button {
+            background: var(--dark-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 20px;
+            border-radius: 35px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Manrope', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .preview-nav button:hover { border-color: var(--border-hover); background: var(--dark-surface); }
+        .preview-nav button:disabled { opacity: 0.3; cursor: default; }
+
+        /* ═══ Lightbox ═══ */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(18, 0, 60, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            backdrop-filter: blur(8px);
+        }
+
+        .lightbox.visible { display: flex; }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 0 60px rgba(156, 114, 251, 0.2);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .lightbox-close:hover { opacity: 1; }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(156, 114, 251, 0.15);
+            border: 1px solid var(--border);
+            color: white;
+            font-size: 28px;
+            padding: 16px 14px;
+            cursor: pointer;
+            border-radius: 35px;
+            transition: all 0.3s ease;
+        }
+
+        .lightbox-nav:hover { background: rgba(156, 114, 251, 0.3); }
+        .lightbox-nav.prev { left: 20px; }
+        .lightbox-nav.next { right: 20px; }
+
+        .lightbox-counter {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text2);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* ═══ Gradient text utility ═══ */
+        .gradient-text {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <h1><span class="gradient-text">DocProcessor</span></h1>
+        <button class="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">&#9776;</button>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+
+    <div class="app">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1><span class="gradient-text">DocProcessor</span> <span class="badge">AI</span></h1>
+                <p>OCR + NLP Document Analysis</p>
+            </div>
+            <div class="sidebar-nav">
+                <button class="nav-btn active" onclick="showPage('upload')" data-page="upload">
+                    <span class="nav-icon">&#128196;</span> Upload
+                </button>
+                <button class="nav-btn" onclick="showPage('database')" data-page="database">
+                    <span class="nav-icon">&#128451;</span> Database
+                </button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="history-empty" id="historyEmpty">No documents processed yet</div>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="main">
+            <div class="topbar">
+                <h2 id="pageTitle">Upload Document</h2>
+                <div id="healthStatus">
+                    <span class="health-dot offline"></span>
+                    <span style="font-size:12px;color:var(--text2)">Checking...</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- UPLOAD PAGE -->
+                <div id="uploadPage">
+                    <div class="upload-section" id="uploadSection">
+                        <div class="dropzone" id="dropzone">
+                            <div class="dropzone-icon">&#128196;</div>
+                            <h3>Drop your document here</h3>
+                            <p>Supports PDF, PNG, JPG, TIFF, BMP (max 20MB)</p>
+                            <div class="browse-btn">Browse Files</div>
+                            <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp" hidden>
+                        </div>
+                        <div class="upload-options">
+                            <label for="docType">Document type:</label>
+                            <select id="docType">
+                                <option value="">Auto-detect</option>
+                                <option value="invoice">Invoice</option>
+                                <option value="general">General</option>
+                            </select>
+                            <label for="emailTo" style="margin-left:16px">Email report to:</label>
+                            <input type="email" id="emailTo" placeholder="recipient@example.com"
+                                   style="padding:10px 18px;border-radius:35px;border:1px solid var(--border);
+                                          background:var(--dark-card);color:var(--text);font-size:13px;width:240px;
+                                          font-family:'Manrope',sans-serif;outline:none;transition:border-color 0.3s;"
+                                   onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'">
+                        </div>
+                        <div class="processing-card" id="processingCard">
+                            <div class="processing-header">
+                                <div class="spinner" id="processingSpinner"></div>
+                                <span id="processingTitle" style="font-weight:600">Processing document...</span>
+                            </div>
+                            <div class="progress-log" id="progressLog"></div>
+                        </div>
+                    </div>
+
+                    <div class="result-view" id="resultView">
+                        <div class="result-header">
+                            <div class="result-title">
+                                <h3 id="resultFilename">document.pdf</h3>
+                                <p id="resultMeta">Processed 2 pages in 3.2s</p>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn" onclick="downloadJSON()">Download JSON</button>
+                                <button class="btn" onclick="copyJSON()">Copy JSON</button>
+                                <button class="btn" onclick="promptEmailReport()">Email Report</button>
+                                <button class="btn btn-danger" onclick="deleteResult()">Delete</button>
+                                <button class="btn btn-primary" onclick="showUpload()">New Upload</button>
+                            </div>
+                        </div>
+                        <div class="result-badges" id="resultBadges"></div>
+                        <div class="tabs" style="margin-top:18px">
+                            <button class="tab active" data-tab="structured" onclick="switchTab(this)">Structured Data</button>
+                            <button class="tab" data-tab="preview" onclick="switchTab(this)" id="previewTab" style="display:none">Preview</button>
+                            <button class="tab" data-tab="rawtext" onclick="switchTab(this)">Raw Text</button>
+                            <button class="tab" data-tab="json" onclick="switchTab(this)">Full JSON</button>
+                        </div>
+                        <div class="tab-content active" id="tab-structured">
+                            <div class="result-grid" id="structuredGrid"></div>
+                        </div>
+                        <div class="tab-content" id="tab-preview">
+                            <div class="preview-container" id="previewContainer">
+                                <div class="preview-loading" id="previewLoading" style="text-align:center;padding:40px;color:var(--text2)">
+                                    Loading preview...
+                                </div>
+                                <div id="previewContent" style="display:none">
+                                    <div class="preview-thumb-strip" id="previewThumbs" style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding:8px 0"></div>
+                                    <div style="text-align:center">
+                                        <img id="previewMainImage" class="preview-page" src="" alt="Document preview"
+                                             onclick="openLightbox()" style="cursor:zoom-in">
+                                    </div>
+                                    <div class="preview-nav" id="previewNav">
+                                        <button onclick="prevPreviewPage()" id="prevPageBtn" disabled>&larr; Previous</button>
+                                        <span id="previewPageInfo" style="font-weight:500">Page 1 of 1</span>
+                                        <button onclick="nextPreviewPage()" id="nextPageBtn" disabled>Next &rarr;</button>
+                                    </div>
+                                </div>
+                                <div id="previewUnavailable" style="display:none;text-align:center;padding:40px;color:var(--text2)">
+                                    <div style="font-size:48px;margin-bottom:12px">&#128196;</div>
+                                    <p>Preview not available for this document</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="tab-rawtext">
+                            <div class="result-card full"><h4>Extracted Text</h4><div class="raw-text-box" id="rawTextContent"></div></div>
+                        </div>
+                        <div class="tab-content" id="tab-json">
+                            <div class="result-card full"><h4>Full API Response</h4><div class="json-box" id="jsonContent"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DATABASE PAGE -->
+                <div class="db-page" id="databasePage">
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card"><div class="stat-value" id="statTotal">-</div><div class="stat-label">Total Documents</div></div>
+                        <div class="stat-card"><div class="stat-value" id="statInvoices">-</div><div class="stat-label">Invoices</div></div>
+                        <div class="stat-card"><div class="stat-value" id="statGeneral">-</div><div class="stat-label">General Docs</div></div>
+                        <div class="stat-card"><div class="stat-value" id="statFailed">-</div><div class="stat-label">Failed</div></div>
+                        <div class="stat-card"><div class="stat-value" id="statAvgTime">-</div><div class="stat-label">Avg Time (s)</div></div>
+                        <div class="stat-card"><div class="stat-value" id="statTotalAmount">-</div><div class="stat-label">Invoice Total</div></div>
+                    </div>
+
+                    <div class="search-bar">
+                        <input type="text" id="dbSearch" placeholder="Search documents (filename, vendor, text, invoice #)..." onkeydown="if(event.key==='Enter')dbDoSearch()">
+                        <select id="dbFilterType" onchange="dbDoSearch()">
+                            <option value="">All Types</option>
+                            <option value="invoice">Invoices</option>
+                            <option value="general">General</option>
+                        </select>
+                        <select id="dbFilterStatus" onchange="dbDoSearch()">
+                            <option value="">All Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        <input type="date" id="dbDateFrom" title="From date" onchange="dbDoSearch()">
+                        <input type="date" id="dbDateTo" title="To date" onchange="dbDoSearch()">
+                        <button class="btn btn-primary btn-sm" onclick="dbDoSearch()">Search</button>
+                        <button class="btn btn-sm" onclick="dbClearSearch()">Clear</button>
+                    </div>
+
+                    <div class="export-bar">
+                        <button class="btn btn-sm" onclick="exportData('json')">Export JSON</button>
+                        <button class="btn btn-sm" onclick="exportData('csv')">Export CSV</button>
+                    </div>
+
+                    <div class="data-table-wrap">
+                        <table class="data-table" id="dbTable">
+                            <thead>
+                                <tr>
+                                    <th onclick="dbSort('filename')">Filename <span class="sort-arrow"></span></th>
+                                    <th onclick="dbSort('doc_type')">Type <span class="sort-arrow"></span></th>
+                                    <th onclick="dbSort('vendor')">Vendor <span class="sort-arrow"></span></th>
+                                    <th onclick="dbSort('total_amount')">Amount <span class="sort-arrow"></span></th>
+                                    <th onclick="dbSort('created_at')">Date <span class="sort-arrow"></span></th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dbTableBody">
+                                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text2)">Click "Database" to load</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <span id="dbPaginationInfo">-</span>
+                            <div class="pagination-btns">
+                                <button class="btn btn-sm" id="dbPrevBtn" onclick="dbPrevPage()" disabled>Prev</button>
+                                <button class="btn btn-sm" id="dbNextBtn" onclick="dbNextPage()" disabled>Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Tab Bar (mobile) -->
+    <div class="bottom-tabs">
+        <div class="bottom-tabs-inner">
+            <button class="bottom-tab active" onclick="mobileSwitchPage('upload')" data-mpage="upload">
+                <span class="tab-icon">&#128196;</span>
+                Upload
+            </button>
+            <button class="bottom-tab" onclick="mobileSwitchPage('database')" data-mpage="database">
+                <span class="tab-icon">&#128451;</span>
+                Database
+            </button>
+            <button class="bottom-tab" onclick="toggleMobileMenu()" data-mpage="history">
+                <span class="tab-icon">&#128337;</span>
+                History
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- Lightbox overlay for full-size preview -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <button class="lightbox-nav prev" id="lightboxPrev" onclick="event.stopPropagation();prevPreviewPage()">&lsaquo;</button>
+        <img id="lightboxImage" src="" alt="Full size preview">
+        <button class="lightbox-nav next" id="lightboxNext" onclick="event.stopPropagation();nextPreviewPage()">&rsaquo;</button>
+        <div class="lightbox-counter" id="lightboxCounter">Page 1 of 1</div>
+    </div>
+
+    <script>
+        const API = window.location.origin + '/api';
+        let currentResult = null;
+        let currentPage = 'upload';
+
+        // DB state
+        let dbOffset = 0;
+        const dbLimit = 25;
+        let dbTotal = 0;
+        let dbSortBy = 'created_at';
+        let dbSortOrder = 'desc';
+
+        // Preview state
+        let previewPages = 0;
+        let previewCurrentPage = 1;
+        let previewJobId = null;
+
+        // ──── Init ────
+        document.addEventListener('DOMContentLoaded', () => {
+            checkHealth();
+            loadHistory();
+            setupDropzone();
+            setInterval(checkHealth, 30000);
+        });
+
+        // ──── Page navigation ────
+        function showPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.nav-btn[data-page="${page}"]`).classList.add('active');
+
+            document.getElementById('uploadPage').style.display = page === 'upload' ? 'block' : 'none';
+            document.getElementById('databasePage').classList.toggle('visible', page === 'database');
+
+            if (page === 'upload') {
+                document.getElementById('pageTitle').textContent =
+                    currentResult ? 'Document Result' : 'Upload Document';
+            } else {
+                document.getElementById('pageTitle').textContent = 'Database Browser';
+                loadStats();
+                dbDoSearch();
+            }
+        }
+
+        // ──── Health ────
+        async function checkHealth() {
+            try {
+                const r = await fetch(`${API}/health`);
+                const data = await r.json();
+                const el = document.getElementById('healthStatus');
+                const dot = data.status === 'ok' ? 'ok' : 'degraded';
+                const parts = [];
+                if (data.tesseract_available) parts.push('Tesseract');
+                if (data.api_key_set) parts.push('Claude API');
+                if (data.database === 'connected') parts.push('DB');
+                el.innerHTML = `<span class="health-dot ${dot}"></span>
+                    <span style="font-size:12px;color:var(--text2)">${parts.join(' + ') || 'Degraded'}</span>`;
+            } catch {
+                document.getElementById('healthStatus').innerHTML =
+                    `<span class="health-dot offline"></span><span style="font-size:12px;color:var(--text2)">Offline</span>`;
+            }
+        }
+
+        // ──── Dropzone ────
+        function setupDropzone() {
+            const dz = document.getElementById('dropzone');
+            const fi = document.getElementById('fileInput');
+            dz.addEventListener('click', () => fi.click());
+            dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            dz.addEventListener('drop', e => {
+                e.preventDefault(); dz.classList.remove('dragover');
+                if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+            });
+            fi.addEventListener('change', () => { if (fi.files.length) uploadFile(fi.files[0]); fi.value = ''; });
+        }
+
+        // ──── Upload ────
+        async function uploadFile(file) {
+            if (file.size > 20 * 1024 * 1024) { showToast('File too large (max 20MB)', 'error'); return; }
+            const ext = '.' + file.name.split('.').pop().toLowerCase();
+            if (!['.pdf','.png','.jpg','.jpeg','.tiff','.bmp'].includes(ext)) {
+                showToast('Unsupported file type', 'error'); return;
+            }
+
+            const card = document.getElementById('processingCard');
+            const log = document.getElementById('progressLog');
+            const spinner = document.getElementById('processingSpinner');
+            card.classList.add('visible'); log.innerHTML = ''; spinner.style.display = 'block';
+            document.getElementById('processingTitle').textContent = `Processing ${file.name}...`;
+            addStep('Uploading file...');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            const docType = document.getElementById('docType').value;
+            const emailTo = document.getElementById('emailTo').value.trim();
+            let url = `${API}/upload`;
+            const params = [];
+            if (docType) params.push(`doc_type=${docType}`);
+            if (emailTo) params.push(`email_to=${encodeURIComponent(emailTo)}`);
+            if (params.length) url += '?' + params.join('&');
+
+            try {
+                addStep('Sending to server...');
+                const steps = [
+                    { text: 'Validating document', delay: 500 },
+                    { text: 'Running OCR / text extraction', delay: 1500 },
+                    { text: 'Classifying document type', delay: 3000 },
+                    { text: 'Parsing with Claude AI', delay: 5000 },
+                    { text: 'Saving to database', delay: 7000 },
+                ];
+                let stepTimers = steps.map(s => setTimeout(() => addStep(s.text + '...'), s.delay));
+
+                const r = await fetch(url, { method: 'POST', body: formData });
+                stepTimers.forEach(clearTimeout);
+
+                if (!r.ok) { const err = await r.json(); throw new Error(err.detail || 'Upload failed'); }
+
+                const result = await r.json();
+                addStep('Saved to database', 'done');
+                if (result.email_report) {
+                    if (result.email_report.sent) {
+                        addStep(`Report emailed to ${emailTo}`, 'done');
+                    } else {
+                        addStep(`Email failed: ${result.email_report.message}`, 'error');
+                    }
+                }
+                addStep('Complete!', 'done');
+                spinner.style.display = 'none';
+                document.getElementById('processingTitle').textContent = 'Processing complete';
+                setTimeout(() => { showResult(result); loadHistory(); }, 800);
+            } catch (err) {
+                spinner.style.display = 'none';
+                document.getElementById('processingTitle').textContent = 'Processing failed';
+                addStep(`Error: ${err.message}`, 'error');
+                showToast(err.message, 'error');
+            }
+        }
+
+        function addStep(text, type = 'active') {
+            const log = document.getElementById('progressLog');
+            const prev = log.querySelector('.step.active');
+            if (prev && type !== 'error') { prev.classList.remove('active'); prev.classList.add('done'); }
+            const el = document.createElement('div');
+            el.className = `step ${type === 'error' ? '' : type}`;
+            if (type === 'error') el.style.color = 'var(--error)';
+            el.textContent = text;
+            log.appendChild(el);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // ──── History ────
+        async function loadHistory() {
+            try {
+                const r = await fetch(`${API}/results?limit=50`);
+                const results = await r.json();
+                const list = document.getElementById('historyList');
+                const empty = document.getElementById('historyEmpty');
+
+                if (!results.length) { empty.style.display = 'block'; return; }
+                empty.style.display = 'none';
+                list.innerHTML = '';
+
+                results.forEach(res => {
+                    const item = document.createElement('div');
+                    item.className = 'history-item' + (currentResult && currentResult.job_id === res.job_id ? ' active' : '');
+                    item.onclick = () => {
+                        showPage('upload');
+                        showResult(res);
+                        document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                    };
+                    const date = new Date(res.created_at).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                    item.innerHTML = `<div class="name">${escHtml(res.filename)}</div>
+                        <div class="meta"><span>${res.doc_type}</span><span>${date}</span></div>`;
+                    list.appendChild(item);
+                });
+            } catch {}
+        }
+
+        // ──── Result View ────
+        function showResult(result) {
+            currentResult = result;
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('resultView').classList.add('visible');
+            document.getElementById('pageTitle').textContent = 'Document Result';
+
+            document.getElementById('resultFilename').textContent = result.filename;
+            document.getElementById('resultMeta').textContent =
+                `${result.pages_processed} page(s) | ${result.processing_time_seconds}s | Job: ${result.job_id}`;
+
+            const badges = document.getElementById('resultBadges');
+            let badgeHtml = `
+                <span class="tag ${result.doc_type === 'invoice' ? 'tag-invoice' : 'tag-general'}">${result.doc_type}</span>
+                <span class="tag ${result.status === 'completed' ? 'tag-completed' : 'tag-failed'}">${result.status}</span>`;
+
+            // V2: OCR confidence badge
+            if (result.ocr_metadata) {
+                const conf = result.ocr_metadata.confidence;
+                const score = result.ocr_metadata.quality_score;
+                if (conf !== null && conf !== undefined) {
+                    const confClass = conf >= 80 ? 'tag-completed' : conf >= 50 ? 'tag-invoice' : 'tag-failed';
+                    badgeHtml += `<span class="tag ${confClass}" title="OCR quality score: ${score || 'N/A'}">OCR: ${Math.round(conf)}%</span>`;
+                }
+                if (result.ocr_metadata.profile_used) {
+                    badgeHtml += `<span class="tag" style="background:rgba(156,114,251,0.1);color:var(--text2)" title="Preprocessing profile used">${result.ocr_metadata.profile_used}</span>`;
+                }
+                if (result.ocr_metadata.merge_applied) {
+                    badgeHtml += `<span class="tag" style="background:rgba(41,237,253,0.1);color:var(--cyan)" title="Multiple OCR passes were merged for better accuracy">merged</span>`;
+                }
+                if (result.ocr_metadata.handwriting_detected) {
+                    badgeHtml += `<span class="tag" style="background:rgba(156,114,251,0.15);color:var(--purple-light)" title="Handwriting detected in document">handwritten</span>`;
+                }
+                if (result.ocr_metadata.extraction_method === 'claude_vision') {
+                    badgeHtml += `<span class="tag" style="background:rgba(41,237,253,0.1);color:var(--cyan)" title="Text extracted using Claude Vision AI">vision</span>`;
+                }
+                if (result.ocr_metadata.extraction_method === 'mixed (vision+tesseract)') {
+                    badgeHtml += `<span class="tag" style="background:rgba(41,237,253,0.1);color:var(--cyan)" title="Mixed extraction: Vision for handwriting, Tesseract for print">mixed</span>`;
+                }
+                if (result.ocr_metadata.yolo_detection) {
+                    badgeHtml += `<span class="tag" style="background:rgba(255,179,71,0.1);color:var(--warning)" title="YOLO object detection used for region segmentation">YOLO</span>`;
+                }
+            }
+            badges.innerHTML = badgeHtml;
+
+            renderStructured(result);
+            document.getElementById('rawTextContent').textContent = result.raw_text || '(no text extracted)';
+            document.getElementById('jsonContent').textContent = JSON.stringify(result, null, 2);
+
+            // Load preview if available
+            const previewTab = document.getElementById('previewTab');
+            if (result.preview && result.preview.available) {
+                previewTab.style.display = 'inline-block';
+                loadPreview(result.job_id);
+            } else {
+                // Still try loading — preview might exist even if not in result
+                previewTab.style.display = 'none';
+                loadPreview(result.job_id);
+            }
+
+            switchTab(document.querySelector('.tab[data-tab="structured"]'));
+        }
+
+        function renderStructured(result) {
+            const grid = document.getElementById('structuredGrid');
+            const sd = result.structured_data;
+            grid.innerHTML = '';
+
+            if (result.doc_type === 'invoice') {
+                const details = document.createElement('div');
+                details.className = 'result-card';
+                details.innerHTML = `<h4>Invoice Details</h4><table class="kv-table">
+                    ${kvRow('Vendor', sd.vendor)}${kvRow('Invoice #', sd.invoice_number)}
+                    ${kvRow('Date', sd.date)}${kvRow('Due Date', sd.due_date)}${kvRow('Currency', sd.currency)}</table>`;
+                grid.appendChild(details);
+
+                const totals = document.createElement('div');
+                totals.className = 'result-card';
+                totals.innerHTML = `<h4>Totals</h4><table class="kv-table">
+                    ${kvRow('Subtotal', fmtMoney(sd.subtotal, sd.currency))}
+                    ${kvRow('Tax', fmtMoney(sd.tax, sd.currency))}
+                    ${kvRow('Total', fmtMoney(sd.total, sd.currency), true)}</table>`;
+                grid.appendChild(totals);
+
+                if (sd.line_items && sd.line_items.length) {
+                    const items = document.createElement('div');
+                    items.className = 'result-card full';
+                    let rows = sd.line_items.map(li => `<tr>
+                        <td>${escHtml(li.description || '')}</td><td>${li.quantity ?? '-'}</td>
+                        <td>${fmtMoney(li.unit_price, sd.currency)}</td>
+                        <td>${fmtMoney(li.amount, sd.currency)}</td></tr>`).join('');
+                    items.innerHTML = `<h4>Line Items (${sd.line_items.length})</h4>
+                        <table class="items-table"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Amount</th></tr></thead>
+                        <tbody>${rows}</tbody></table>`;
+                    grid.appendChild(items);
+                }
+            } else {
+                const info = document.createElement('div');
+                info.className = 'result-card full';
+                let html = '<h4>Document Analysis</h4><table class="kv-table">';
+                for (const [key, val] of Object.entries(sd)) {
+                    if (typeof val === 'object' && val !== null) continue;
+                    html += kvRow(fmtKey(key), val);
+                }
+                html += '</table>';
+                for (const [key, val] of Object.entries(sd)) {
+                    if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+                        html += `<h4 style="margin-top:16px">${fmtKey(key)}</h4><table class="kv-table">`;
+                        for (const [k, v] of Object.entries(val)) html += kvRow(fmtKey(k), v);
+                        html += '</table>';
+                    }
+                    if (Array.isArray(val) && val.length) {
+                        html += `<h4 style="margin-top:16px">${fmtKey(key)}</h4><div style="font-size:13px;line-height:1.8">`;
+                        val.forEach(item => {
+                            if (typeof item === 'string') {
+                                html += `<div style="padding:4px 0;border-bottom:1px solid var(--border)">${escHtml(item)}</div>`;
+                            } else if (typeof item === 'object') {
+                                html += `<div style="padding:8px 0;border-bottom:1px solid var(--border)">`;
+                                for (const [k, v] of Object.entries(item))
+                                    html += `<span style="color:var(--text2)">${fmtKey(k)}:</span> ${escHtml(String(v ?? ''))}&nbsp;&nbsp;`;
+                                html += '</div>';
+                            }
+                        });
+                        html += '</div>';
+                    }
+                }
+                info.innerHTML = html;
+                grid.appendChild(info);
+            }
+
+            // V2: OCR Quality card (shown for all document types)
+            if (result.ocr_metadata) {
+                const m = result.ocr_metadata;
+                const ocrCard = document.createElement('div');
+                ocrCard.className = 'result-card full';
+                let confColor = (m.confidence >= 80) ? 'var(--teal)' : (m.confidence >= 50) ? 'var(--warning)' : 'var(--error)';
+                let ocrHtml = `<h4>OCR Quality Report</h4>`;
+
+                // Confidence bar
+                ocrHtml += `<div style="margin:14px 0">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                        <span style="color:var(--text2);font-weight:500">Confidence</span>
+                        <span style="color:${confColor};font-weight:700">${Math.round(m.confidence || 0)}%</span>
+                    </div>
+                    <div style="height:8px;background:var(--navy);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
+                        <div style="height:100%;width:${m.confidence || 0}%;background:${confColor};border-radius:4px;transition:width 0.5s"></div>
+                    </div>
+                </div>`;
+
+                ocrHtml += `<table class="kv-table">`;
+                const methodLabel = m.extraction_method === 'claude_vision' ? 'Claude Vision AI'
+                    : m.extraction_method === 'mixed (vision+tesseract)' ? 'Mixed (Vision + Tesseract)'
+                    : 'Tesseract OCR';
+                ocrHtml += kvRow('Extraction Method', methodLabel);
+                if (m.handwriting_detected) ocrHtml += kvRow('Handwriting', 'Detected — used AI vision for accuracy');
+                if (m.yolo_detection) {
+                    const yd = m.yolo_detection;
+                    ocrHtml += kvRow('YOLO Detection', yd.method + ' (' + yd.model_type + ')');
+                    ocrHtml += kvRow('Regions Found', yd.total_regions + ' total (' + yd.handwritten_regions + ' handwritten, ' + yd.printed_regions + ' printed)');
+                    ocrHtml += kvRow('Handwriting Ratio', Math.round(yd.handwriting_ratio * 100) + '%');
+                }
+                ocrHtml += kvRow('Profile Used', m.profile_used || 'native');
+                if (m.psm_mode && m.psm_mode !== 'vision') ocrHtml += kvRow('PSM Mode', m.psm_mode);
+                if (m.quality_score) ocrHtml += kvRow('Quality Score', m.quality_score + '/100');
+                if (m.word_count) ocrHtml += kvRow('Words Extracted', m.word_count);
+                if (m.passes_run) ocrHtml += kvRow('OCR Passes Run', m.passes_run);
+                ocrHtml += kvRow('Result Merging', m.merge_applied ? 'Yes (multiple passes merged)' : 'No (single best pass)');
+                ocrHtml += `</table>`;
+
+                // Show all profile scores
+                if (m.all_scores && Object.keys(m.all_scores).length > 0) {
+                    ocrHtml += `<h4 style="margin-top:18px">Profile Scores</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">`;
+                    const sorted = Object.entries(m.all_scores).sort((a,b) => b[1] - a[1]);
+                    sorted.forEach(([name, score]) => {
+                        const bg = score > 70 ? 'var(--teal)' : score > 40 ? 'var(--warning)' : 'var(--error)';
+                        ocrHtml += `<span style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;
+                            background:${bg}18;color:${bg};border:1px solid ${bg}33">
+                            ${name}: ${score}</span>`;
+                    });
+                    ocrHtml += `</div>`;
+                }
+
+                // Show low confidence words
+                if (m.low_confidence_words && m.low_confidence_words.length > 0) {
+                    ocrHtml += `<h4 style="margin-top:18px">Low-Confidence Words</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">`;
+                    m.low_confidence_words.forEach(w => {
+                        ocrHtml += `<span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;
+                            background:rgba(255,92,108,0.1);color:var(--error);border:1px solid rgba(255,92,108,0.2)"
+                            title="Confidence: ${w.confidence}%">"${escHtml(w.word)}" (${w.confidence}%)</span>`;
+                    });
+                    ocrHtml += `</div>`;
+                }
+
+                ocrCard.innerHTML = ocrHtml;
+                grid.appendChild(ocrCard);
+            }
+        }
+
+        // ──── Actions ────
+        function showUpload() {
+            currentResult = null;
+            previewJobId = null;
+            previewPages = 0;
+            previewCurrentPage = 1;
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('resultView').classList.remove('visible');
+            document.getElementById('processingCard').classList.remove('visible');
+            document.getElementById('pageTitle').textContent = 'Upload Document';
+            document.getElementById('previewTab').style.display = 'none';
+            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+        }
+
+        function downloadJSON() {
+            if (!currentResult) return;
+            const blob = new Blob([JSON.stringify(currentResult, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `${currentResult.job_id}.json`; a.click();
+            URL.revokeObjectURL(a.href); showToast('JSON downloaded', 'success');
+        }
+
+        function copyJSON() {
+            if (!currentResult) return;
+            navigator.clipboard.writeText(JSON.stringify(currentResult, null, 2))
+                .then(() => showToast('Copied to clipboard', 'success'))
+                .catch(() => showToast('Copy failed', 'error'));
+        }
+
+        async function deleteResult() {
+            if (!currentResult) return;
+            if (!confirm(`Delete result for ${currentResult.filename}?`)) return;
+            try {
+                await fetch(`${API}/results/${currentResult.job_id}`, { method: 'DELETE' });
+                showToast('Deleted from database', 'success');
+                showUpload(); loadHistory();
+                if (currentPage === 'database') dbDoSearch();
+            } catch { showToast('Delete failed', 'error'); }
+        }
+
+        async function promptEmailReport() {
+            if (!currentResult) return;
+            const email = prompt('Enter email address to send the report to:',
+                                  document.getElementById('emailTo').value || '');
+            if (!email || !email.includes('@')) {
+                if (email !== null) showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            try {
+                showToast('Sending report...', 'success');
+                const r = await fetch(
+                    `${API}/results/${currentResult.job_id}/email?email_to=${encodeURIComponent(email)}`,
+                    { method: 'POST' }
+                );
+                const data = await r.json();
+                if (r.ok) {
+                    showToast(`Report sent to ${email}`, 'success');
+                } else {
+                    showToast(data.detail || 'Failed to send email', 'error');
+                }
+            } catch (err) {
+                showToast('Failed to send email: ' + err.message, 'error');
+            }
+        }
+
+        function switchTab(el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tab-' + el.dataset.tab).classList.add('active');
+        }
+
+        // ══════════════════════════════════════════════
+        // DATABASE BROWSER
+        // ══════════════════════════════════════════════
+
+        async function loadStats() {
+            try {
+                const r = await fetch(`${API}/db/stats`);
+                const s = await r.json();
+                document.getElementById('statTotal').textContent = s.total_documents;
+                document.getElementById('statInvoices').textContent = s.invoices;
+                document.getElementById('statGeneral').textContent = s.general;
+                document.getElementById('statFailed').textContent = s.failed;
+                document.getElementById('statAvgTime').textContent = s.avg_processing_time + 's';
+                document.getElementById('statTotalAmount').textContent =
+                    s.total_invoice_amount > 0 ? '$' + s.total_invoice_amount.toLocaleString() : '-';
+            } catch {}
+        }
+
+        async function dbDoSearch() {
+            const q = document.getElementById('dbSearch').value.trim();
+            const docType = document.getElementById('dbFilterType').value;
+            const status = document.getElementById('dbFilterStatus').value;
+            const dateFrom = document.getElementById('dbDateFrom').value;
+            const dateTo = document.getElementById('dbDateTo').value;
+
+            const params = new URLSearchParams();
+            if (q) params.set('q', q);
+            if (docType) params.set('doc_type', docType);
+            if (status) params.set('status', status);
+            if (dateFrom) params.set('date_from', dateFrom);
+            if (dateTo) params.set('date_to', dateTo);
+            params.set('sort_by', dbSortBy);
+            params.set('sort_order', dbSortOrder);
+            params.set('limit', dbLimit);
+            params.set('offset', dbOffset);
+
+            try {
+                const r = await fetch(`${API}/db/search?${params}`);
+                const data = await r.json();
+                dbTotal = data.total;
+                renderDbTable(data.results);
+                updatePagination(data);
+            } catch (e) {
+                document.getElementById('dbTableBody').innerHTML =
+                    `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--error)">Failed to load: ${e.message}</td></tr>`;
+            }
+        }
+
+        function renderDbTable(docs) {
+            const tbody = document.getElementById('dbTableBody');
+            if (!docs.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text2)">No documents found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = docs.map(d => {
+                const date = new Date(d.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const amount = d.total_amount != null ? fmtMoney(d.total_amount, d.currency) : '-';
+                const statusClass = d.status === 'completed' ? 'tag-completed' : 'tag-failed';
+                const typeClass = d.doc_type === 'invoice' ? 'tag-invoice' : 'tag-general';
+                return `<tr onclick="viewDbDoc('${d.job_id}')">
+                    <td title="${escHtml(d.filename)}">${escHtml(d.filename)}</td>
+                    <td><span class="tag ${typeClass}">${d.doc_type}</span></td>
+                    <td>${escHtml(d.vendor || '-')}</td>
+                    <td>${amount}</td>
+                    <td>${date}</td>
+                    <td><span class="tag ${statusClass}">${d.status}</span></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();dbDelete('${d.job_id}')">Del</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updatePagination(data) {
+            const from = data.total === 0 ? 0 : dbOffset + 1;
+            const to = Math.min(dbOffset + dbLimit, data.total);
+            document.getElementById('dbPaginationInfo').textContent = `${from}-${to} of ${data.total}`;
+            document.getElementById('dbPrevBtn').disabled = dbOffset === 0;
+            document.getElementById('dbNextBtn').disabled = !data.has_more;
+        }
+
+        function dbPrevPage() { dbOffset = Math.max(0, dbOffset - dbLimit); dbDoSearch(); }
+        function dbNextPage() { dbOffset += dbLimit; dbDoSearch(); }
+
+        function dbSort(field) {
+            if (dbSortBy === field) {
+                dbSortOrder = dbSortOrder === 'desc' ? 'asc' : 'desc';
+            } else {
+                dbSortBy = field; dbSortOrder = 'desc';
+            }
+            dbOffset = 0;
+            dbDoSearch();
+        }
+
+        function dbClearSearch() {
+            document.getElementById('dbSearch').value = '';
+            document.getElementById('dbFilterType').value = '';
+            document.getElementById('dbFilterStatus').value = '';
+            document.getElementById('dbDateFrom').value = '';
+            document.getElementById('dbDateTo').value = '';
+            dbOffset = 0;
+            dbDoSearch();
+        }
+
+        async function viewDbDoc(jobId) {
+            try {
+                const r = await fetch(`${API}/results/${jobId}`);
+                if (!r.ok) throw new Error('Not found');
+                const doc = await r.json();
+                showPage('upload');
+                showResult(doc);
+            } catch { showToast('Failed to load document', 'error'); }
+        }
+
+        async function dbDelete(jobId) {
+            if (!confirm('Delete this document?')) return;
+            try {
+                await fetch(`${API}/results/${jobId}`, { method: 'DELETE' });
+                showToast('Deleted', 'success');
+                dbDoSearch(); loadStats(); loadHistory();
+            } catch { showToast('Delete failed', 'error'); }
+        }
+
+        function exportData(format) {
+            const docType = document.getElementById('dbFilterType').value;
+            let url = `${API}/db/export/${format}`;
+            if (docType) url += `?doc_type=${docType}`;
+            window.open(url, '_blank');
+        }
+
+        // ══════════════════════════════════════════════
+        // DOCUMENT PREVIEW
+        // ══════════════════════════════════════════════
+
+        async function loadPreview(jobId) {
+            previewJobId = jobId;
+            previewCurrentPage = 1;
+            const tab = document.getElementById('previewTab');
+            const loading = document.getElementById('previewLoading');
+            const content = document.getElementById('previewContent');
+            const unavailable = document.getElementById('previewUnavailable');
+
+            // Reset state
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            unavailable.style.display = 'none';
+
+            try {
+                const r = await fetch(`${API}/preview/${jobId}/info`);
+                if (!r.ok) throw new Error('Preview info not available');
+                const info = await r.json();
+
+                if (!info.preview_available || info.pages < 1) {
+                    loading.style.display = 'none';
+                    unavailable.style.display = 'block';
+                    tab.style.display = 'inline-block';
+                    return;
+                }
+
+                previewPages = info.pages;
+                tab.style.display = 'inline-block';
+
+                // Build thumbnail strip for multi-page docs
+                const thumbStrip = document.getElementById('previewThumbs');
+                thumbStrip.innerHTML = '';
+                if (previewPages > 1) {
+                    for (let i = 1; i <= previewPages; i++) {
+                        const thumb = document.createElement('img');
+                        thumb.src = `${API}/preview/${jobId}?page=${i}`;
+                        thumb.className = 'preview-thumb' + (i === 1 ? ' active' : '');
+                        thumb.alt = `Page ${i}`;
+                        thumb.title = `Page ${i}`;
+                        thumb.dataset.page = i;
+                        thumb.onclick = () => goToPreviewPage(i);
+                        thumb.style.cssText = 'width:60px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--border);flex-shrink:0;transition:all 0.3s;';
+                        if (i === 1) thumb.style.borderColor = 'var(--teal)';
+                        thumbStrip.appendChild(thumb);
+                    }
+                    thumbStrip.style.display = 'flex';
+                } else {
+                    thumbStrip.style.display = 'none';
+                }
+
+                // Load first page
+                const mainImg = document.getElementById('previewMainImage');
+                mainImg.src = `${API}/preview/${jobId}?page=1`;
+                updatePreviewNav();
+
+                loading.style.display = 'none';
+                content.style.display = 'block';
+
+            } catch (err) {
+                loading.style.display = 'none';
+                unavailable.style.display = 'block';
+                tab.style.display = 'inline-block';
+            }
+        }
+
+        function goToPreviewPage(page) {
+            if (page < 1 || page > previewPages) return;
+            previewCurrentPage = page;
+            const mainImg = document.getElementById('previewMainImage');
+            mainImg.src = `${API}/preview/${previewJobId}?page=${page}`;
+
+            // Update thumbnail highlight
+            document.querySelectorAll('#previewThumbs img').forEach(img => {
+                img.style.borderColor = parseInt(img.dataset.page) === page ? 'var(--teal)' : 'var(--border)';
+            });
+
+            updatePreviewNav();
+
+            // Update lightbox if open
+            const lb = document.getElementById('lightbox');
+            if (lb.classList.contains('visible')) {
+                document.getElementById('lightboxImage').src = mainImg.src;
+                document.getElementById('lightboxCounter').textContent = `Page ${page} of ${previewPages}`;
+            }
+        }
+
+        function prevPreviewPage() { goToPreviewPage(previewCurrentPage - 1); }
+        function nextPreviewPage() { goToPreviewPage(previewCurrentPage + 1); }
+
+        function updatePreviewNav() {
+            const nav = document.getElementById('previewNav');
+            nav.style.display = previewPages > 1 ? 'flex' : 'none';
+            document.getElementById('prevPageBtn').disabled = previewCurrentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = previewCurrentPage >= previewPages;
+            document.getElementById('previewPageInfo').textContent = `Page ${previewCurrentPage} of ${previewPages}`;
+        }
+
+        function openLightbox() {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImage');
+            img.src = `${API}/preview/${previewJobId}?page=${previewCurrentPage}`;
+            document.getElementById('lightboxCounter').textContent = `Page ${previewCurrentPage} of ${previewPages}`;
+            document.getElementById('lightboxPrev').style.display = previewPages > 1 ? 'block' : 'none';
+            document.getElementById('lightboxNext').style.display = previewPages > 1 ? 'block' : 'none';
+            lb.classList.add('visible');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('lightbox').classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+
+        // Keyboard navigation for lightbox
+        document.addEventListener('keydown', (e) => {
+            const lb = document.getElementById('lightbox');
+            if (!lb.classList.contains('visible')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') prevPreviewPage();
+            if (e.key === 'ArrowRight') nextPreviewPage();
+        });
+
+        // ──── Helpers ────
+        function kvRow(label, value, bold = false) {
+            const display = value != null && value !== '' ? escHtml(String(value)) : '<span style="color:var(--text3)">-</span>';
+            return `<tr><td class="label">${label}</td><td class="value" ${bold ? 'style="font-size:16px;font-weight:800"' : ''}>${display}</td></tr>`;
+        }
+        function fmtKey(key) { return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+        function fmtMoney(val, currency) {
+            if (val == null) return '-';
+            const sym = (currency || '').toUpperCase() === 'USD' ? '$' : (currency || '');
+            return `${sym}${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.className = `toast ${type} visible`;
+            setTimeout(() => t.classList.remove('visible'), 3000);
+        }
+        function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        // ══════════════════════════════════════════════
+        // MOBILE / PWA
+        // ══════════════════════════════════════════════
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        }
+
+        function closeMobileMenu() {
+            document.querySelector('.sidebar').classList.remove('open');
+            document.getElementById('mobileOverlay').classList.remove('visible');
+        }
+
+        function mobileSwitchPage(page) {
+            showPage(page);
+            document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+            const active = document.querySelector(`.bottom-tab[data-mpage="${page}"]`);
+            if (active) active.classList.add('active');
+            closeMobileMenu();
+        }
+
+        // Close sidebar when a history item is clicked (mobile)
+        const origShowResult = showResult;
+        showResult = function(result) {
+            origShowResult(result);
+            closeMobileMenu();
+            // Update bottom tabs
+            document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+            const uploadTab = document.querySelector('.bottom-tab[data-mpage="upload"]');
+            if (uploadTab) uploadTab.classList.add('active');
+        };
+
+        // Handle back button on mobile (close sidebar / lightbox)
+        window.addEventListener('popstate', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const lightbox = document.getElementById('lightbox');
+            if (sidebar.classList.contains('open')) {
+                closeMobileMenu();
+            } else if (lightbox.classList.contains('visible')) {
+                closeLightbox();
+            }
+        });
+
+        // Touch-friendly: close sidebar on swipe left
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            const sidebar = document.querySelector('.sidebar');
+            if (!sidebar.classList.contains('open')) return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            if (dx < -80) closeMobileMenu(); // swipe left to close
+        }, { passive: true });
+
+        // Handle hash-based navigation (for PWA shortcuts)
+        if (window.location.hash === '#database') {
+            setTimeout(() => showPage('database'), 100);
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
